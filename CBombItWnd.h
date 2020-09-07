@@ -20,7 +20,7 @@ private:
 	int BombNum = 1; //当前拥有炸弹数
 	int stepNum = -1; //放下炸弹后走的步数，没放时为-1，放炸弹后变为0，每步计数，爆炸后变回-1
 	int statistic = 0; //记录可被炸物体的数量
-	CBitmap* pBitmap;
+	CBitmap* pBombing[5];
 	CDC* mdc;
 	CBitmap* pPlayerPic[2][4];
 	CBitmap* pGround;
@@ -37,6 +37,9 @@ public:
 	void SetDied(int N);
 	int getStatistic();
 	void minusOneObject();
+	afx_msg void OnAbout();
+	afx_msg void OnQuit();
+	afx_msg void OnRestart();
 };
 
 

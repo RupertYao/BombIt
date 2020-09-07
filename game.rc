@@ -68,6 +68,17 @@ BEGIN
     CTEXT           "恭喜，你获得了胜利！！！",IDC_STATIC,20,29,134,8
 END
 
+IDD_AboutBoxDlg DIALOGEX 0, 0, 184, 88
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "关于 Q版泡泡堂简化版"
+FONT 9, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,127,67,50,14
+    LTEXT           "Q版泡泡堂简化版 V0.1",IDC_STATIC,64,19,104,8
+    LTEXT           "版权所有（C）开发者YY",IDC_STATIC,62,33,95,11
+    LTEXT           "保留所有权利",IDC_STATIC,61,46,88,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -92,6 +103,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 73
     END
+
+    IDD_AboutBoxDlg, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 177
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 81
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -109,6 +128,30 @@ END
 IDD_CDeclarreWinDlg AFX_DIALOG_LAYOUT
 BEGIN
     0
+END
+
+IDD_AboutBoxDlg AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU1 MENU
+BEGIN
+    POPUP "游戏"
+    BEGIN
+        MENUITEM "重玩",                          40005
+        MENUITEM "退出",                          ID_QUIT
+    END
+    POPUP "帮助"
+    BEGIN
+        MENUITEM "关于",                          ID_ABOUT
+    END
 END
 
 #endif    // 中文(简体，中国) resources

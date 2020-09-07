@@ -7,12 +7,14 @@
 #include "CBombItWnd.h"
 #include "CDeclarreWinDlg.h"
 #include "CDeclareDeathDlg.h"
+#include "AboutBoxDlg.h"
+#include "resource.h"
 
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
 #include <mmsystem.h>
-#pragma comment(lib,"Winmm.lib")
+#pragma comment(lib,"winmm.lib")
 
 // CBombItWnd
 
@@ -30,7 +32,7 @@ void drawMashroom(CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY);
 void drawWall(CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY);
 void drawBomb(CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY);
 void drawSheild(CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY);
-void drawBombing(CBombItWnd* Wnd,HWND hWnd, CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY);
+void drawBombing(CBombItWnd* Wnd,HWND hWnd, CBitmap* pBitmap[], CDC* mdc, CPaintDC& dc, int PosX, int PosY);
 void drawPlayer(CBitmap* pPlayerPic[][4], CDC* mdc, CPaintDC& dc, int PosX, int PosY, int dir, int WithBomb = 0);
 
 
@@ -38,12 +40,18 @@ CBombItWnd::CBombItWnd()
 {
 	this->Create(NULL, _T("BombIt"));
 	this->SetWindowTextW(_T("简化Q版泡泡堂"));
-	this->SetWindowPos(NULL, 100, 50, 60*ROW_NUM +20, 60*COLUMN_NUM +50, 0);
+	this->SetWindowPos(NULL, 100, 50, 60*COLUMN_NUM +20, 60*ROW_NUM +75, 0);
+	CMenu menu;
+	menu.LoadMenuW(IDR_MENU1);
+	this->SetMenu(&menu);
 
 	mciSendString(_T("open Resource\\bgm.mp3 repeat"), NULL, 0, NULL);
 	mciSendString(_T("play Resource\\bgm.mp3 repeat"), NULL, 0, NULL);
 
-	pBitmap = new CBitmap;
+	
+
+	
+
 	mdc = new CDC;
 	CClientDC dc(this);
 	mdc->CreateCompatibleDC(&dc);
@@ -78,6 +86,19 @@ CBombItWnd::CBombItWnd()
 			pPlayerPic[i][j]->m_hObject = LoadImage(NULL, fileName, IMAGE_BITMAP, 60, 60, LR_LOADFROMFILE);
 		}
 	}
+	for (int i = 0; i < 5; i++)
+	{
+		pBombing[i] = new CBitmap;
+		if (i)
+		{
+			swprintf_s(fileName, _T("Resource\\Bombing\\%d.bmp"), i);
+			pBombing[i]->m_hObject = LoadImage(NULL, fileName, IMAGE_BITMAP, 60, 60, LR_LOADFROMFILE);
+		}
+		else
+		{
+			pBombing[i]->m_hObject = LoadImage(NULL, _T("Resource\\Bombing\\center.bmp"), IMAGE_BITMAP, 60, 60, LR_LOADFROMFILE);
+		}
+	}
 	fOut = std::ofstream("temp.txt", std::ios_base::out);
 }
 
@@ -97,7 +118,11 @@ CBombItWnd::~CBombItWnd()
 	delete pWall;
 	delete pShield;
 	delete pBomb;
-	delete pBitmap;
+	for (int i = 0; i < 5; i++)
+	{
+		pBombing[i]->DeleteObject();
+		delete pBombing[i];
+	}
 	delete mdc;
 	for (int i = 0; i < 2; i++)
 	{
@@ -113,6 +138,9 @@ CBombItWnd::~CBombItWnd()
 BEGIN_MESSAGE_MAP(CBombItWnd, CFrameWnd)
 	ON_WM_PAINT()
 	ON_WM_KEYDOWN()
+	ON_COMMAND(ID_ABOUT, &CBombItWnd::OnAbout)
+	ON_COMMAND(ID_QUIT, &CBombItWnd::OnQuit)
+	ON_COMMAND(ID_RESTART, &CBombItWnd::OnRestart)
 END_MESSAGE_MAP()
 
 
@@ -127,16 +155,11 @@ void CBombItWnd::OnPaint()
 	if (died)
 	{
 		initMap();
+		dir = 0;
 		PosX = 0;
 		PosY = 0;
 		died = 0;
-	}/*
-	if (!statistic)
-	{
-		initMap();
-		PosX = 0;
-		PosY = 0;
-	}*/
+	}
 	int tmp, seed;
 
 	int tmpI, tmpJ;
@@ -214,12 +237,18 @@ void CBombItWnd::OnPaint()
 	}
 	if (flag)
 	{
-		drawBombing(this,this->GetSafeHwnd(), pBitmap, mdc, dc, tmpJ * 60, tmpI * 60);
+		drawBombing(this,this->GetSafeHwnd(), pBombing, mdc, dc, tmpJ * 60, tmpI * 60);
 		BombNum++;
 		stepNum = -1;
 	}
 	fOut << statistic;
-	if (!getStatistic())
+	if (count == 0 && statistic == 0)
+	{
+		MessageBox(_T("资源加载失败..."), _T("游戏提示"));
+		ASSERT(this != NULL);
+		this->SendMessage(WM_CLOSE);
+	}
+	if (count && !statistic)
 	{
 		SetDied(1);
 		CDeclarreWinDlg WinDlg;
@@ -280,42 +309,32 @@ void drawSheild(CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY)
 	dc.BitBlt(PosX, PosY, 60, 60, mdc, 0, 0, SRCCOPY);
 }
 
-void drawBombing(CBombItWnd* Wnd,HWND hWnd, CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY)
+void drawBombing(CBombItWnd* Wnd,HWND hWnd, CBitmap* pBitmap[], CDC* mdc, CPaintDC& dc, int PosX, int PosY)
 {
-	pBitmap->m_hObject = LoadImage(NULL, _T("Resource\\Bombing\\center.bmp"), IMAGE_BITMAP, 60, 60, LR_LOADFROMFILE);
-	mdc->SelectObject(pBitmap);
+	mdc->SelectObject(pBitmap[0]);
 	dc.BitBlt(PosX, PosY, 60, 60, mdc, 0, 0, SRCCOPY);
-	pBitmap->DeleteObject();
 	int tmpI = PosY / 60;
 	int tmpJ = PosX / 60;
 	if (map[tmpI - 1][tmpJ] == 0)
 	{
-		pBitmap->m_hObject = LoadImage(NULL, _T("Resource\\Bombing\\1.bmp"), IMAGE_BITMAP, 60, 60, LR_LOADFROMFILE);
-		mdc->SelectObject(pBitmap);
+		mdc->SelectObject(pBitmap[1]);
 		dc.BitBlt(PosX, PosY - 60, 60, 60, mdc, 0, 0, SRCCOPY);
-		pBitmap->DeleteObject();
 	}
 	if (map[tmpI + 1][tmpJ] == 0)
 	{
-		pBitmap->m_hObject = LoadImage(NULL, _T("Resource\\Bombing\\2.bmp"), IMAGE_BITMAP, 60, 60, LR_LOADFROMFILE);
-		mdc->SelectObject(pBitmap);
+		mdc->SelectObject(pBitmap[2]);
 		dc.BitBlt(PosX, PosY + 60, 60, 60, mdc, 0, 0, SRCCOPY);
-		pBitmap->DeleteObject();
 
 	}
 	if (map[tmpI][tmpJ - 1] == 0)
 	{
-		pBitmap->m_hObject = LoadImage(NULL, _T("Resource\\Bombing\\3.bmp"), IMAGE_BITMAP, 60, 60, LR_LOADFROMFILE);
-		mdc->SelectObject(pBitmap);
+		mdc->SelectObject(pBitmap[3]);
 		dc.BitBlt(PosX - 60, PosY, 60, 60, mdc, 0, 0, SRCCOPY);
-		pBitmap->DeleteObject();
 	}
 	if (map[tmpI][tmpJ + 1] == 0)
 	{
-		pBitmap->m_hObject = LoadImage(NULL, _T("Resource\\Bombing\\4.bmp"), IMAGE_BITMAP, 60, 60, LR_LOADFROMFILE);
-		mdc->SelectObject(pBitmap);
+		mdc->SelectObject(pBitmap[4]);
 		dc.BitBlt(PosX + 60, PosY, 60, 60, mdc, 0, 0, SRCCOPY);
-		pBitmap->DeleteObject();
 	}
 	InvalidateRect(hWnd, CRect(PosX > 0 ? PosX - 60 : PosX, PosY > 0 ? PosY - 60 : PosY, PosX < 840 ? PosX + 120 : PosX + 60, PosY < 840 ? PosY + 120 : PosY + 60), true);
 	Sleep(200);
@@ -510,4 +529,34 @@ int CBombItWnd::getStatistic()
 void CBombItWnd::minusOneObject()
 {
 	statistic--;
+}
+
+
+void CBombItWnd::OnAbout()
+{
+	AboutBoxDlg ABtDlg;
+	ABtDlg.DoModal();
+	// MessageBox(_T("本小游戏归开发者版权所有，仿冒必究", ), _T("关于"));
+	// TODO: 在此添加命令处理程序代码
+}
+
+
+void CBombItWnd::OnQuit()
+{
+	ASSERT(this != NULL);
+	this->SendMessage(WM_CLOSE);
+	// TODO: 在此添加命令处理程序代码
+}
+
+
+
+void CBombItWnd::OnRestart()
+{
+	initMap();
+	dir = 0;
+	PosX = 0;
+	PosY = 0;
+	died = 0;
+	Invalidate();
+	// TODO: 在此添加命令处理程序代码
 }

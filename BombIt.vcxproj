@@ -142,6 +142,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AboutBoxDlg.h" />
     <ClInclude Include="CBombItApp.h" />
     <ClInclude Include="CBombItWnd.h" />
     <ClInclude Include="CDeclareDeathDlg.h" />
@@ -153,13 +154,12 @@
     <ResourceCompile Include="game.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AboutBoxDlg.cpp" />
     <ClCompile Include="CBombItApp.cpp" />
     <ClCompile Include="CBombItWnd.cpp" />
     <ClCompile Include="CDeclareDeathDlg.cpp" />
     <ClCompile Include="CDeclarreWinDlg.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="README.md" />
+    <ClCompile Include="game.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
