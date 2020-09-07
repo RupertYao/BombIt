@@ -41,15 +41,12 @@ CBombItWnd::CBombItWnd()
     this->Create(NULL, _T("BombIt"));
     this->SetWindowTextW(_T("简化Q版泡泡堂"));
     this->SetWindowPos(NULL, 100, 50, 60*COLUMN_NUM +20, 60*ROW_NUM +75, 0);
+
     menu.LoadMenuW(IDR_MENU1);
     this->SetMenu(&menu);
 
     mciSendString(_T("open Resource\\bgm.mp3 repeat"), NULL, 0, NULL);
     mciSendString(_T("play Resource\\bgm.mp3 repeat"), NULL, 0, NULL);
-
-    
-
-    
 
     mdc = new CDC;
     CClientDC dc(this);
