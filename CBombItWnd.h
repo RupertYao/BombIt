@@ -14,6 +14,8 @@ public:
 protected:
 	DECLARE_MESSAGE_MAP()
 private:
+	CMenu menu;
+
 	int dir = 0; //人物方向
 	int PosX = 0, PosY = 0; //人物当前位置 PosX:所在列，PosY:所在行
 	int died = 0; //人物上局是否已死亡
