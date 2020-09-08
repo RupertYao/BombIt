@@ -21,6 +21,8 @@
 #define ROW_NUM 15
 #define COLUMN_NUM 15
 
+#define BOMB_TIME 700
+
 IMPLEMENT_DYNCREATE(CBombItWnd, CFrameWnd)
 
 int map[ROW_NUM][COLUMN_NUM] = {};
@@ -137,6 +139,7 @@ BEGIN_MESSAGE_MAP(CBombItWnd, CFrameWnd)
     ON_COMMAND(ID_ABOUT, &CBombItWnd::OnAbout)
     ON_COMMAND(ID_QUIT, &CBombItWnd::OnQuit)
     ON_COMMAND(ID_RESTART, &CBombItWnd::OnRestart)
+    ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 
@@ -151,6 +154,7 @@ void CBombItWnd::OnPaint()
     if (died)
     {
         initMap();
+        BombNum = 1;
         dir = 0;
         PosX = 0;
         PosY = 0;
@@ -213,10 +217,6 @@ void CBombItWnd::OnPaint()
                 break;
             case 7:
                 drawBomb(pBomb, mdc, dc, j * 60, i * 60);
-                if (stepNum >= 1)
-                {
-                    map[i][j] = 8;
-                }
                 break;
             case 8:
                 tmpI = i;
@@ -235,7 +235,6 @@ void CBombItWnd::OnPaint()
     {
         drawBombing(this,this->GetSafeHwnd(), pBombing, mdc, dc, tmpJ * 60, tmpI * 60);
         BombNum++;
-        stepNum = -1;
     }
     fOut << statistic;
     if (count == 0 && statistic == 0)
@@ -326,7 +325,6 @@ void drawBombing(CBombItWnd* Wnd,HWND hWnd, CBitmap* pBitmap[], CDC* mdc, CPaint
     {
         mdc->SelectObject(pBitmap[2]);
         dc.BitBlt(PosX, PosY + 60, 60, 60, mdc, 0, 0, SRCCOPY);
-
     }
     if (map[tmpI][tmpJ - 1] == 0)
     {
@@ -339,6 +337,7 @@ void drawBombing(CBombItWnd* Wnd,HWND hWnd, CBitmap* pBitmap[], CDC* mdc, CPaint
         dc.BitBlt(PosX + 60, PosY, 60, 60, mdc, 0, 0, SRCCOPY);
     }
     InvalidateRect(hWnd, CRect(PosX > 0 ? PosX - 60 : PosX, PosY > 0 ? PosY - 60 : PosY, PosX < 840 ? PosX + 120 : PosX + 60, PosY < 840 ? PosY + 120 : PosY + 60), true);
+    Wnd->KillTimer(1);
     Sleep(200);
     if (map[tmpI][tmpJ] == 8)
     {
@@ -351,6 +350,8 @@ void drawBombing(CBombItWnd* Wnd,HWND hWnd, CBitmap* pBitmap[], CDC* mdc, CPaint
                 CDeclareDeathDlg DeathDlg;
                 DeathDlg.DoModal();
                 Wnd->Invalidate();
+                //Wnd->KillTimer(1);
+                map[tmpI - 1][tmpJ] = 0;
                 return;
             }
             map[tmpI - 1][tmpJ] = 0;
@@ -365,6 +366,8 @@ void drawBombing(CBombItWnd* Wnd,HWND hWnd, CBitmap* pBitmap[], CDC* mdc, CPaint
                 CDeclareDeathDlg DeathDlg;
                 DeathDlg.DoModal();
                 Wnd->Invalidate();
+                //Wnd->KillTimer(1);
+                map[tmpI + 1][tmpJ] = 0;
                 return;
             }
             map[tmpI + 1][tmpJ] = 0;
@@ -378,6 +381,8 @@ void drawBombing(CBombItWnd* Wnd,HWND hWnd, CBitmap* pBitmap[], CDC* mdc, CPaint
                 CDeclareDeathDlg DeathDlg;
                 DeathDlg.DoModal();
                 Wnd->Invalidate();
+                //Wnd->KillTimer(1);
+                map[tmpI][tmpJ - 1] = 0;
                 return;
             }
             map[tmpI][tmpJ - 1] = 0;
@@ -391,13 +396,14 @@ void drawBombing(CBombItWnd* Wnd,HWND hWnd, CBitmap* pBitmap[], CDC* mdc, CPaint
                 CDeclareDeathDlg DeathDlg;
                 DeathDlg.DoModal();
                 Wnd->Invalidate();
+                //Wnd->KillTimer(1);
+                map[tmpI][tmpJ + 1] = 0;
                 return;
             }
             map[tmpI][tmpJ + 1] = 0;
             //Wnd->minusOneObject();
         }
     }
-    
     //InvalidateRect(hWnd, CRect(PosX > 0 ? PosX - 60 : PosX, PosY > 0 ? PosY - 60 : PosY, PosX < 840 ? PosX + 120 : PosX, PosY < 840 ? PosY + 120 : PosY), true);
 }
 
@@ -430,10 +436,6 @@ void CBombItWnd::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
             map[PosY + 1][PosX] = 5;
             PosY++;
         }
-        if (stepNum >= 0)
-        {
-            stepNum++;
-        }
 
         InvalidateRect(CRect((tmpX > 1 ? tmpX - 2 : (tmpX > 0 ? tmpX - 1 : tmpX)) * 60, (tmpY > 1 ? tmpY - 2 : (tmpY > 0 ? tmpY - 1 : tmpY)) * 60, (tmpX < 13 ? tmpX + 3 : (tmpX < 14 ? tmpX + 2 : (tmpX < 15 ? tmpX + 1 : tmpX))) * 60, (tmpY < 13 ? tmpY + 3 : (tmpY < 14 ? tmpY + 2 : (tmpY < 15 ? tmpY + 1 : tmpY))) * 60), true);
         break;
@@ -453,10 +455,6 @@ void CBombItWnd::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
             map[PosY - 1][PosX] = 5;
             PosY--;
         }
-        if (stepNum >= 0)
-        {
-            stepNum++;
-        }
         InvalidateRect(CRect((tmpX > 1 ? tmpX - 2 : (tmpX > 0 ? tmpX - 1 : tmpX)) * 60, (tmpY > 1 ? tmpY - 2 : (tmpY > 0 ? tmpY - 1 : tmpY)) * 60, (tmpX < 13 ? tmpX + 3 : (tmpX < 14 ? tmpX + 2 : (tmpX < 15 ? tmpX + 1 : tmpX))) * 60, (tmpY < 13 ? tmpY + 3 : (tmpY < 14 ? tmpY + 2 : (tmpY < 15 ? tmpY + 1 : tmpY))) * 60), true);
         break;
     case VK_LEFT:
@@ -474,10 +472,6 @@ void CBombItWnd::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
             map[PosY][PosX] = 7;
             map[PosY][PosX - 1] = 5;
             PosX--;
-        }
-        if (stepNum >= 0)
-        {
-            stepNum++;
         }
         InvalidateRect(CRect((tmpX > 1 ? tmpX - 2 : (tmpX > 0 ? tmpX - 1 : tmpX)) * 60, (tmpY > 1 ? tmpY - 2 : (tmpY > 0 ? tmpY - 1 : tmpY)) * 60, (tmpX < 13 ? tmpX + 3 : (tmpX < 14 ? tmpX + 2 : (tmpX < 15 ? tmpX + 1 : tmpX))) * 60, (tmpY < 13 ? tmpY + 3 : (tmpY < 14 ? tmpY + 2 : (tmpY < 15 ? tmpY + 1 : tmpY))) * 60), true);
         break;
@@ -497,10 +491,6 @@ void CBombItWnd::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
             map[PosY][PosX + 1] = 5;
             PosX++;
         }
-        if (stepNum >= 0)
-        {
-            stepNum++;
-        }
         InvalidateRect(CRect((tmpX > 1 ? tmpX - 2 : (tmpX > 0 ? tmpX - 1 : tmpX)) * 60, (tmpY > 1 ? tmpY - 2 : (tmpY > 0 ? tmpY - 1 : tmpY)) * 60, (tmpX < 13 ? tmpX + 3 : (tmpX < 14 ? tmpX + 2 : (tmpX < 15 ? tmpX + 1 : tmpX))) * 60, (tmpY < 13 ? tmpY + 3 : (tmpY < 14 ? tmpY + 2 : (tmpY < 15 ? tmpY + 1 : tmpY))) * 60), true);
         break;
     case VK_SPACE:
@@ -508,7 +498,9 @@ void CBombItWnd::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
         {
             map[PosY][PosX] = 6;
             BombNum--;
-            stepNum = 0;
+            BombPosX = PosX;
+            BombPosY = PosY;
+            SetTimer(1, BOMB_TIME, NULL);
             InvalidateRect(CRect(PosX * 60, PosY * 60, (PosX + 1) * 60, (PosY + 1) * 60), true);
         }
         break;
@@ -538,8 +530,6 @@ void CBombItWnd::OnAbout()
 {
     AboutBoxDlg ABtDlg;
     ABtDlg.DoModal();
-    // MessageBox(_T("本小游戏归开发者版权所有，仿冒必究", ), _T("关于"));
-    // TODO: 在此添加命令处理程序代码
 }
 
 
@@ -547,7 +537,6 @@ void CBombItWnd::OnQuit()
 {
     ASSERT(this != NULL);
     this->SendMessage(WM_CLOSE);
-    // TODO: 在此添加命令处理程序代码
 }
 
 
@@ -560,5 +549,29 @@ void CBombItWnd::OnRestart()
     PosY = 0;
     died = 0;
     Invalidate();
-    // TODO: 在此添加命令处理程序代码
+}
+
+
+void CBombItWnd::OnTimer(UINT_PTR nIDEvent)
+{
+    int flag = 0;
+    if (map[BombPosY][BombPosX] == 6)
+    {
+        flag = 1;
+    }
+    map[BombPosY][BombPosX] = 8;
+    Invalidate();
+    BombPosX = -1;
+    BombPosY = -1;
+    if (flag)
+    {
+        died = 1;
+        CDeclareDeathDlg DeathDlg;
+        DeathDlg.DoModal();
+        Invalidate();
+        KillTimer(1);
+        CFrameWnd::OnTimer(nIDEvent);
+        return;
+    }
+    CFrameWnd::OnTimer(nIDEvent);
 }

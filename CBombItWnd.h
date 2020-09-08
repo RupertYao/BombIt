@@ -20,7 +20,7 @@ private:
 	int PosX = 0, PosY = 0; //人物当前位置 PosX:所在列，PosY:所在行
 	int died = 0; //人物上局是否已死亡
 	int BombNum = 1; //当前拥有炸弹数
-	int stepNum = -1; //放下炸弹后走的步数，没放时为-1，放炸弹后变为0，每步计数，爆炸后变回-1
+	int BombPosX = -1, BombPosY = -1;
 	int statistic = 0; //记录可被炸物体的数量
 	CBitmap* pBombing[5];
 	CDC* mdc;
@@ -42,6 +42,7 @@ public:
 	afx_msg void OnAbout();
 	afx_msg void OnQuit();
 	afx_msg void OnRestart();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
 
 
