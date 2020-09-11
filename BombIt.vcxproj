@@ -163,6 +163,9 @@
     <ClCompile Include="CDeclarreWinDlg.cpp" />
     <ClCompile Include="game.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="icon.ico" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

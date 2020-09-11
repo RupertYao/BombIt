@@ -51,6 +51,8 @@ public:
 	afx_msg void OnNextsong();
 	afx_msg void OnNobgm();
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 };
 
 

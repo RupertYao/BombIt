@@ -145,6 +145,7 @@ BEGIN_MESSAGE_MAP(CBombItWnd, CFrameWnd)
     ON_COMMAND(ID_NEXT_SONG, &CBombItWnd::OnNextsong)
     ON_COMMAND(ID_NOBGM, &CBombItWnd::OnNobgm)
     ON_WM_ERASEBKGND()
+    ON_WM_CREATE()
 END_MESSAGE_MAP()
 
 
@@ -622,4 +623,27 @@ BOOL CBombItWnd::OnEraseBkgnd(CDC* pDC)
     // TODO: 在此添加消息处理程序代码和/或调用默认值
     return TRUE;
     return CFrameWnd::OnEraseBkgnd(pDC);
+}
+
+
+int CBombItWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+    if (CFrameWnd::OnCreate(lpCreateStruct) == -1)
+        return -1;
+
+    HICON m_hIcon;
+    m_hIcon = AfxGetApp()->LoadIconW(IDI_ICON1);
+    SetIcon(m_hIcon, TRUE);
+    SetIcon(m_hIcon, FALSE);
+    // TODO:  在此添加您专用的创建代码
+
+    return 0;
+}
+
+
+BOOL CBombItWnd::PreCreateWindow(CREATESTRUCT& cs)
+{
+    // TODO: 在此添加专用代码和/或调用基类
+    cs.style = cs.style & ~WS_MAXIMIZEBOX & ~WS_THICKFRAME;
+    return CFrameWnd::PreCreateWindow(cs);
 }
