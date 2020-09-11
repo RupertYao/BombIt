@@ -146,10 +146,18 @@ BEGIN
     POPUP "游戏"
     BEGIN
         MENUITEM "重玩",                          40005
+        MENUITEM "更换地图",                        ID_CHANGE_MAP
+        POPUP "更换背景音乐"
+        BEGIN
+            MENUITEM "上一首",                         ID_PREVIOUS_SONG
+            MENUITEM "下一首",                         ID_NEXT_SONG
+            MENUITEM "无背景音乐",                       ID_NOBGM
+        END
         MENUITEM "退出",                          ID_QUIT
     END
     POPUP "帮助"
     BEGIN
+        MENUITEM "玩法说明",                        ID_ABOUT_GAME
         MENUITEM "关于",                          ID_ABOUT
     END
 END

@@ -13,8 +13,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
-#include <mmsystem.h>
-#pragma comment(lib,"winmm.lib")
 
 // CBombItWnd
 
@@ -26,6 +24,8 @@
 IMPLEMENT_DYNCREATE(CBombItWnd, CFrameWnd)
 
 int map[ROW_NUM][COLUMN_NUM] = {};
+int GameSum = 0;
+int MapNum = 1;
 
 void initMap();
 void drawGround(CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY);
@@ -37,7 +37,6 @@ void drawSheild(CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY);
 void drawBombing(CBombItWnd* Wnd,HWND hWnd, CBitmap* pBitmap[], CDC* mdc, CPaintDC& dc, int PosX, int PosY);
 void drawPlayer(CBitmap* pPlayerPic[][4], CDC* mdc, CPaintDC& dc, int PosX, int PosY, int dir, int WithBomb = 0);
 
-
 CBombItWnd::CBombItWnd()
 {
     this->Create(NULL, _T("BombIt"));
@@ -47,9 +46,8 @@ CBombItWnd::CBombItWnd()
     menu.LoadMenuW(IDR_MENU1);
     this->SetMenu(&menu);
 
-    mciSendString(_T("open Resource\\bgm.mp3 repeat"), NULL, 0, NULL);
-    mciSendString(_T("play Resource\\bgm.mp3 repeat"), NULL, 0, NULL);
-
+    bgm = new BGM;
+    bgm->playMusic();
     mdc = new CDC;
     CClientDC dc(this);
     mdc->CreateCompatibleDC(&dc);
@@ -116,6 +114,7 @@ CBombItWnd::~CBombItWnd()
     delete pWall;
     delete pShield;
     delete pBomb;
+    delete bgm;
     for (int i = 0; i < 5; i++)
     {
         pBombing[i]->DeleteObject();
@@ -140,6 +139,12 @@ BEGIN_MESSAGE_MAP(CBombItWnd, CFrameWnd)
     ON_COMMAND(ID_QUIT, &CBombItWnd::OnQuit)
     ON_COMMAND(ID_RESTART, &CBombItWnd::OnRestart)
     ON_WM_TIMER()
+    ON_COMMAND(ID_ABOUT_GAME, &CBombItWnd::OnAboutGame)
+    ON_COMMAND(ID_CHANGE_MAP, &CBombItWnd::OnChangemap)
+    ON_COMMAND(ID_PREVIOUS_SONG, &CBombItWnd::OnPrevioussong)
+    ON_COMMAND(ID_NEXT_SONG, &CBombItWnd::OnNextsong)
+    ON_COMMAND(ID_NOBGM, &CBombItWnd::OnNobgm)
+    ON_WM_ERASEBKGND()
 END_MESSAGE_MAP()
 
 
@@ -257,11 +262,13 @@ void CBombItWnd::OnPaint()
 void initMap()
 {
     char fileName[10];
-    int num, seed;
+    int seed;
     seed = (int)time(0);
     srand((unsigned int)seed);
-    num = rand() % 3 + 1;
-    sprintf_s(fileName, "map%d.txt", num);
+    if(GameSum==0)
+    MapNum = rand() % 3 + 1;
+    GameSum++;
+    sprintf_s(fileName, "map%d.txt", MapNum);
     std::ifstream fInput(fileName, std::ios_base::in);
     for (int i = 0; i < ROW_NUM; i++)
     {
@@ -550,7 +557,11 @@ void CBombItWnd::OnRestart()
     died = 0;
     Invalidate();
 }
-
+void CBombItWnd::OnAboutGame()
+{
+    MessageBox(_T("玩家用方向键上下左右控制人物的移动，空格键放下炸弹"), _T("游戏玩法说明"));
+    // TODO: 在此添加命令处理程序代码
+}
 
 void CBombItWnd::OnTimer(UINT_PTR nIDEvent)
 {
@@ -574,4 +585,41 @@ void CBombItWnd::OnTimer(UINT_PTR nIDEvent)
         return;
     }
     CFrameWnd::OnTimer(nIDEvent);
+}
+
+void CBombItWnd::OnChangemap()
+{
+    MapNum = (MapNum + 1) % 3+1;
+    BombNum = 1;
+    dir = 0;
+    PosX = 0;
+    PosY = 0;
+    died = 0;
+    initMap();
+    Invalidate();
+}
+
+void CBombItWnd::OnPrevioussong()
+{
+    bgm->previousMusic();
+}
+
+
+void CBombItWnd::OnNextsong()
+{
+    bgm->nextMusic();
+}
+
+
+void CBombItWnd::OnNobgm()
+{
+    bgm->stopMusic();
+}
+
+
+BOOL CBombItWnd::OnEraseBkgnd(CDC* pDC)
+{
+    // TODO: 在此添加消息处理程序代码和/或调用默认值
+    return TRUE;
+    return CFrameWnd::OnEraseBkgnd(pDC);
 }

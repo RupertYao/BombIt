@@ -143,6 +143,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AboutBoxDlg.h" />
+    <ClInclude Include="BGM.h" />
     <ClInclude Include="CBombItApp.h" />
     <ClInclude Include="CBombItWnd.h" />
     <ClInclude Include="CDeclareDeathDlg.h" />
@@ -155,6 +156,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AboutBoxDlg.cpp" />
+    <ClCompile Include="BGM.cpp" />
     <ClCompile Include="CBombItApp.cpp" />
     <ClCompile Include="CBombItWnd.cpp" />
     <ClCompile Include="CDeclareDeathDlg.cpp" />
