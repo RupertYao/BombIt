@@ -1,6 +1,7 @@
 #pragma once
 #ifndef MAP_H_
 #define MAP_H_
+
 #include "game.h"
 #include "CBombItWnd.h"
 

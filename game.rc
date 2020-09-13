@@ -74,7 +74,7 @@ CAPTION "关于 Q版泡泡堂简化版"
 FONT 9, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "确定",IDOK,127,67,50,14
-    LTEXT           "Q版泡泡堂简化版 V0.1",IDC_STATIC,64,19,104,8
+    LTEXT           "Q版泡泡堂简化版 V2.1",IDC_STATIC,64,19,104,8
     LTEXT           "版权所有（C）开发者YY",IDC_STATIC,62,33,95,11
     LTEXT           "保留所有权利",IDC_STATIC,61,46,88,8
 END

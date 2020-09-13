@@ -310,7 +310,6 @@ void CBombItWnd::OnRestart()
 void CBombItWnd::OnAboutGame()
 {
     MessageBox(_T("玩家用方向键上下左右控制人物的移动，空格键放下炸弹"), _T("游戏玩法说明"));
-    // TODO: 在此添加命令处理程序代码
 }
 
 void CBombItWnd::OnTimer(UINT_PTR nIDEvent)
@@ -369,9 +368,7 @@ void CBombItWnd::OnNobgm()
 
 BOOL CBombItWnd::OnEraseBkgnd(CDC* pDC)
 {
-    // TODO: 在此添加消息处理程序代码和/或调用默认值
     return TRUE;
-    return CFrameWnd::OnEraseBkgnd(pDC);
 }
 
 
@@ -384,7 +381,6 @@ int CBombItWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
     m_hIcon = AfxGetApp()->LoadIconW(IDI_ICON1);
     SetIcon(m_hIcon, TRUE);
     SetIcon(m_hIcon, FALSE);
-    // TODO:  在此添加您专用的创建代码
 
     return 0;
 }
@@ -392,7 +388,6 @@ int CBombItWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 BOOL CBombItWnd::PreCreateWindow(CREATESTRUCT& cs)
 {
-    // TODO: 在此添加专用代码和/或调用基类
     cs.style = cs.style & ~WS_MAXIMIZEBOX & ~WS_THICKFRAME;
     return CFrameWnd::PreCreateWindow(cs);
 }
