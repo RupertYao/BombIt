@@ -1,9 +1,12 @@
 ﻿#pragma once
 #include "game.h"
 
+
 #include <fstream>
 #include "BGM.h"
 // CBombItWnd 框架
+
+class Map;
 
 class CBombItWnd : public CFrameWnd
 {
@@ -16,7 +19,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 private:
 	CMenu menu;
-
+	Map* p_mMap;
 	BGM* bgm;
 	int dir = 0; //人物方向
 	int PosX = 0, PosY = 0; //人物当前位置 PosX:所在列，PosY:所在行
@@ -24,15 +27,6 @@ private:
 	int BombNum = 1; //当前拥有炸弹数
 	int BombPosX = -1, BombPosY = -1;
 	int statistic = 0; //记录可被炸物体的数量
-	CBitmap* pBombing[5];
-	CDC* mdc;
-	CBitmap* pPlayerPic[2][4];
-	CBitmap* pGround;
-	CBitmap* pTree;
-	CBitmap* pMashroom;
-	CBitmap* pWall;
-	CBitmap* pShield;
-	CBitmap* pBomb;
 	std::ofstream fOut;
 	int count = 0;
 public:

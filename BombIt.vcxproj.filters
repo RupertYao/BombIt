@@ -39,6 +39,9 @@
     <ClInclude Include="BGM.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Map.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="game.rc">
@@ -65,6 +68,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="BGM.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Map.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

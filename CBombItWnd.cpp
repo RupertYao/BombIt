@@ -9,6 +9,7 @@
 #include "CDeclareDeathDlg.h"
 #include "AboutBoxDlg.h"
 #include "resource.h"
+#include "Map.h"
 
 #include <cstdlib>
 #include <ctime>
@@ -16,26 +17,7 @@
 
 // CBombItWnd
 
-#define ROW_NUM 15
-#define COLUMN_NUM 15
-
-#define BOMB_TIME 700
-
 IMPLEMENT_DYNCREATE(CBombItWnd, CFrameWnd)
-
-int map[ROW_NUM][COLUMN_NUM] = {};
-int GameSum = 0;
-int MapNum = 1;
-
-void initMap();
-void drawGround(CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY);
-void drawTree(CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY);
-void drawMashroom(CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY);
-void drawWall(CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY);
-void drawBomb(CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY);
-void drawSheild(CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY);
-void drawBombing(CBombItWnd* Wnd,HWND hWnd, CBitmap* pBitmap[], CDC* mdc, CPaintDC& dc, int PosX, int PosY);
-void drawPlayer(CBitmap* pPlayerPic[][4], CDC* mdc, CPaintDC& dc, int PosX, int PosY, int dir, int WithBomb = 0);
 
 CBombItWnd::CBombItWnd()
 {
@@ -48,87 +30,16 @@ CBombItWnd::CBombItWnd()
 
     bgm = new BGM;
     bgm->playMusic();
-    mdc = new CDC;
-    CClientDC dc(this);
-    mdc->CreateCompatibleDC(&dc);
-
-    initMap();
-    WCHAR fileName[32];
-    pTree = new CBitmap;
-    pTree->m_hObject = LoadImage(NULL, _T("Resource\\tree.bmp"), IMAGE_BITMAP, 60, 60, LR_LOADFROMFILE);
-    pMashroom = new CBitmap;
-    pMashroom->m_hObject = LoadImage(NULL, _T("Resource\\mashroom.bmp"), IMAGE_BITMAP, 60, 60, LR_LOADFROMFILE);
-    pGround = new CBitmap;
-    pGround->m_hObject = LoadImage(NULL, _T("Resource\\ground.bmp"), IMAGE_BITMAP, 60, 60, LR_LOADFROMFILE);
-    pWall = new CBitmap;
-    pWall->m_hObject = LoadImage(NULL, _T("Resource\\wall.bmp"), IMAGE_BITMAP, 60, 60, LR_LOADFROMFILE);
-    pShield = new CBitmap;
-    pShield->m_hObject = LoadImage(NULL, _T("Resource\\shield.bmp"), IMAGE_BITMAP, 60, 60, LR_LOADFROMFILE);
-    pBomb = new CBitmap;
-    pBomb->m_hObject = LoadImage(NULL, _T("Resource\\bomb.bmp"), IMAGE_BITMAP, 60, 60, LR_LOADFROMFILE);
-    for (int i = 0; i < 2; i++)
-    {
-        for (int j = 0; j < 4; j++)
-        {
-            pPlayerPic[i][j] = new CBitmap;
-            if (i)
-            {
-                swprintf_s(fileName, _T("Resource\\PlayerWithBomb\\%d.bmp"), j + 1);
-            }
-            else
-            {
-                swprintf_s(fileName, _T("Resource\\Player\\%d.bmp"), j + 1);
-            }
-            pPlayerPic[i][j]->m_hObject = LoadImage(NULL, fileName, IMAGE_BITMAP, 60, 60, LR_LOADFROMFILE);
-        }
-    }
-    for (int i = 0; i < 5; i++)
-    {
-        pBombing[i] = new CBitmap;
-        if (i)
-        {
-            swprintf_s(fileName, _T("Resource\\Bombing\\%d.bmp"), i);
-            pBombing[i]->m_hObject = LoadImage(NULL, fileName, IMAGE_BITMAP, 60, 60, LR_LOADFROMFILE);
-        }
-        else
-        {
-            pBombing[i]->m_hObject = LoadImage(NULL, _T("Resource\\Bombing\\center.bmp"), IMAGE_BITMAP, 60, 60, LR_LOADFROMFILE);
-        }
-    }
+    
+    p_mMap = new Map(this);
     fOut = std::ofstream("temp.txt", std::ios_base::out);
 }
 
 CBombItWnd::~CBombItWnd()
 {
-    mciSendString(_T("close Resource\\bgm.mp3 repeat"), NULL, 0, NULL);
     fOut.close();
-    pTree->DeleteObject();
-    pMashroom->DeleteObject();
-    pGround->DeleteObject();
-    pWall->DeleteObject();
-    pShield->DeleteObject();
-    pBomb->DeleteObject();
-    delete pTree;
-    delete pMashroom;
-    delete pGround;
-    delete pWall;
-    delete pShield;
-    delete pBomb;
+    delete p_mMap;
     delete bgm;
-    for (int i = 0; i < 5; i++)
-    {
-        pBombing[i]->DeleteObject();
-        delete pBombing[i];
-    }
-    delete mdc;
-    for (int i = 0; i < 2; i++)
-    {
-        for (int j = 0; j < 4; j++)
-        {
-            pPlayerPic[i][j]->DeleteObject();
-            delete pPlayerPic[i][j];
-        }
-    }
 }
 
 
@@ -159,7 +70,7 @@ void CBombItWnd::OnPaint()
     statistic = 0;
     if (died)
     {
-        initMap();
+        p_mMap->initMap();
         BombNum = 1;
         dir = 0;
         PosX = 0;
@@ -179,10 +90,10 @@ void CBombItWnd::OnPaint()
         for (int j = 0; j < COLUMN_NUM; j++)
         {
             
-            switch (map[i][j])
+            switch (p_mMap->map[i][j])
             {
             case 0:
-                drawGround(pGround, mdc, dc, j * 60, i * 60);
+                p_mMap->drawGround(dc, j * 60, i * 60);
                 break;
             case -1:
             {
@@ -190,39 +101,39 @@ void CBombItWnd::OnPaint()
                 switch (tmp)
                 {
                 case 0:
-                {map[i][j] = 2;
-                drawMashroom(pMashroom, mdc, dc, j * 60, i * 60);
+                {p_mMap->map[i][j] = 2;
+                p_mMap->drawMashroom(dc, j * 60, i * 60);
                 break; }
                 case 1:
-                {map[i][j] = 3;
-                drawTree(pTree, mdc, dc, j * 60, i * 60);
+                {p_mMap->map[i][j] = 3;
+                p_mMap->drawTree(dc, j * 60, i * 60);
                 break; }
                 }
             }
             statistic++;
                 break;
             case 1:
-                drawWall(pWall, mdc, dc, j * 60, i * 60);
+                p_mMap->drawWall(dc, j * 60, i * 60);
                 break;
             case 2:
-                drawMashroom(pMashroom, mdc, dc, j * 60, i * 60);
+                p_mMap->drawMashroom(dc, j * 60, i * 60);
                 statistic++;
                 break;
             case 3:
-                drawTree(pTree, mdc, dc, j * 60, i * 60);
+                p_mMap->drawTree(dc, j * 60, i * 60);
                 statistic++;
                 break;
             case 4:
-                drawSheild(pShield, mdc, dc, j * 60, i * 60);
+                p_mMap->drawShield(dc, j * 60, i * 60);
                 break;
             case 5:
-                drawPlayer(pPlayerPic, mdc, dc, j * 60, i * 60, dir);
+                p_mMap->drawPlayer(dc, j * 60, i * 60, dir);
                 break;
             case 6:
-                drawPlayer(pPlayerPic, mdc, dc, j * 60, i * 60, dir, 1);
+                p_mMap->drawPlayer(dc, j * 60, i * 60, dir, 1);
                 break;
             case 7:
-                drawBomb(pBomb, mdc, dc, j * 60, i * 60);
+                p_mMap->drawBomb(dc, j * 60, i * 60);
                 break;
             case 8:
                 tmpI = i;
@@ -233,13 +144,13 @@ void CBombItWnd::OnPaint()
                 break;
             }
             
-            fOut << map[i][j] << ' ';
+            fOut << p_mMap->map[i][j] << ' ';
         }
         fOut << std::endl;
     }
     if (flag)
     {
-        drawBombing(this,this->GetSafeHwnd(), pBombing, mdc, dc, tmpJ * 60, tmpI * 60);
+        p_mMap->drawBombing(this, dc, tmpJ * 60, tmpI * 60);
         BombNum++;
     }
     fOut << statistic;
@@ -260,168 +171,6 @@ void CBombItWnd::OnPaint()
     count++;
 }
 
-void initMap()
-{
-    char fileName[10];
-    int seed;
-    seed = (int)time(0);
-    srand((unsigned int)seed);
-    if(GameSum==0)
-    MapNum = rand() % 3 + 1;
-    GameSum++;
-    sprintf_s(fileName, "map%d.txt", MapNum);
-    std::ifstream fInput(fileName, std::ios_base::in);
-    for (int i = 0; i < ROW_NUM; i++)
-    {
-        for (int j = 0; j < COLUMN_NUM; j++)
-        {
-            fInput >> map[i][j];
-        }
-    }
-    fInput.close();
-}
-
-void drawGround(CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY)
-{
-    mdc->SelectObject(pBitmap);
-    dc.BitBlt(PosX, PosY, 60, 60, mdc, 0, 0, SRCCOPY);
-}
-
-void drawTree(CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY)
-{
-    mdc->SelectObject(pBitmap);
-    dc.BitBlt(PosX, PosY, 60, 60, mdc, 0, 0, SRCCOPY);
-}
-
-void drawMashroom(CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY)
-{
-    mdc->SelectObject(pBitmap);
-    dc.BitBlt(PosX, PosY, 60, 60, mdc, 0, 0, SRCCOPY);
-}
-
-void drawWall(CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY)
-{
-    mdc->SelectObject(pBitmap);
-    dc.BitBlt(PosX, PosY, 60, 60, mdc, 0, 0, SRCCOPY);
-}
-
-void drawBomb(CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY)
-{
-    mdc->SelectObject(pBitmap);
-    dc.BitBlt(PosX, PosY, 60, 60, mdc, 0, 0, SRCCOPY);
-
-}
-
-void drawSheild(CBitmap* pBitmap, CDC* mdc, CPaintDC& dc, int PosX, int PosY)
-{
-    mdc->SelectObject(pBitmap);
-    dc.BitBlt(PosX, PosY, 60, 60, mdc, 0, 0, SRCCOPY);
-}
-
-void drawBombing(CBombItWnd* Wnd,HWND hWnd, CBitmap* pBitmap[], CDC* mdc, CPaintDC& dc, int PosX, int PosY)
-{
-    mdc->SelectObject(pBitmap[0]);
-    dc.BitBlt(PosX, PosY, 60, 60, mdc, 0, 0, SRCCOPY);
-    int tmpI = PosY / 60;
-    int tmpJ = PosX / 60;
-    if (map[tmpI - 1][tmpJ] == 0)
-    {
-        mdc->SelectObject(pBitmap[1]);
-        dc.BitBlt(PosX, PosY - 60, 60, 60, mdc, 0, 0, SRCCOPY);
-    }
-    if (map[tmpI + 1][tmpJ] == 0)
-    {
-        mdc->SelectObject(pBitmap[2]);
-        dc.BitBlt(PosX, PosY + 60, 60, 60, mdc, 0, 0, SRCCOPY);
-    }
-    if (map[tmpI][tmpJ - 1] == 0)
-    {
-        mdc->SelectObject(pBitmap[3]);
-        dc.BitBlt(PosX - 60, PosY, 60, 60, mdc, 0, 0, SRCCOPY);
-    }
-    if (map[tmpI][tmpJ + 1] == 0)
-    {
-        mdc->SelectObject(pBitmap[4]);
-        dc.BitBlt(PosX + 60, PosY, 60, 60, mdc, 0, 0, SRCCOPY);
-    }
-    InvalidateRect(hWnd, CRect(PosX > 0 ? PosX - 60 : PosX, PosY > 0 ? PosY - 60 : PosY, PosX < 840 ? PosX + 120 : PosX + 60, PosY < 840 ? PosY + 120 : PosY + 60), true);
-    Wnd->KillTimer(1);
-    Sleep(200);
-    if (map[tmpI][tmpJ] == 8)
-    {
-        map[tmpI][tmpJ] = 0;
-        if (tmpI > 0 && map[tmpI - 1][tmpJ] != 1)
-        {
-            if (map[tmpI - 1][tmpJ] == 5)
-            {
-                Wnd->SetDied(1);
-                CDeclareDeathDlg DeathDlg;
-                DeathDlg.DoModal();
-                Wnd->Invalidate();
-                //Wnd->KillTimer(1);
-                map[tmpI - 1][tmpJ] = 0;
-                return;
-            }
-            map[tmpI - 1][tmpJ] = 0;
-            //Wnd->minusOneObject();
-        }
-
-        if (tmpI < ROW_NUM - 1 && map[tmpI + 1][tmpJ] != 1)
-        {
-            if (map[tmpI + 1][tmpJ] == 5)
-            {
-                Wnd->SetDied(1);
-                CDeclareDeathDlg DeathDlg;
-                DeathDlg.DoModal();
-                Wnd->Invalidate();
-                //Wnd->KillTimer(1);
-                map[tmpI + 1][tmpJ] = 0;
-                return;
-            }
-            map[tmpI + 1][tmpJ] = 0;
-            //Wnd->minusOneObject();
-        }
-        if (tmpJ > 0 && map[tmpI][tmpJ - 1] != 1)
-        {
-            if (map[tmpI][tmpJ - 1] == 5)
-            {
-                Wnd->SetDied(1);
-                CDeclareDeathDlg DeathDlg;
-                DeathDlg.DoModal();
-                Wnd->Invalidate();
-                //Wnd->KillTimer(1);
-                map[tmpI][tmpJ - 1] = 0;
-                return;
-            }
-            map[tmpI][tmpJ - 1] = 0;
-            //Wnd->minusOneObject();
-        }
-        if (tmpJ < COLUMN_NUM - 1 && map[tmpI][tmpJ + 1] != 1)
-        {
-            if (map[tmpI][tmpJ + 1] == 5)
-            {
-                Wnd->SetDied(1);
-                CDeclareDeathDlg DeathDlg;
-                DeathDlg.DoModal();
-                Wnd->Invalidate();
-                //Wnd->KillTimer(1);
-                map[tmpI][tmpJ + 1] = 0;
-                return;
-            }
-            map[tmpI][tmpJ + 1] = 0;
-            //Wnd->minusOneObject();
-        }
-    }
-    //InvalidateRect(hWnd, CRect(PosX > 0 ? PosX - 60 : PosX, PosY > 0 ? PosY - 60 : PosY, PosX < 840 ? PosX + 120 : PosX, PosY < 840 ? PosY + 120 : PosY), true);
-}
-
-void drawPlayer(CBitmap* pPlayerPic[][4], CDC* mdc, CPaintDC& dc, int PosX, int PosY, int dir, int WithBomb)
-{
-    mdc->SelectObject(pPlayerPic[WithBomb][dir]);
-    dc.BitBlt(PosX, PosY, 60, 60, mdc, 0, 0, SRCCOPY);
-}
-
-
 void CBombItWnd::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
     int tmpX, tmpY;
@@ -432,16 +181,16 @@ void CBombItWnd::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
         dir = 0;
         tmpX = PosX;
         tmpY = PosY;
-        if (PosY < ROW_NUM - 1 && map[PosY][PosX] == 5 && map[PosY + 1][PosX] == 0)
+        if (PosY < ROW_NUM - 1 && p_mMap->map[PosY][PosX] == 5 && p_mMap->map[PosY + 1][PosX] == 0)
         {
-            map[PosY][PosX] = 0;
-            map[PosY + 1][PosX] = 5;
+            p_mMap->map[PosY][PosX] = 0;
+            p_mMap->map[PosY + 1][PosX] = 5;
             PosY++;
         }
-        if (PosY < ROW_NUM - 1 && map[PosY][PosX] == 6 && map[PosY + 1][PosX] == 0)
+        if (PosY < ROW_NUM - 1 && p_mMap->map[PosY][PosX] == 6 && p_mMap->map[PosY + 1][PosX] == 0)
         {
-            map[PosY][PosX] = 7;
-            map[PosY + 1][PosX] = 5;
+            p_mMap->map[PosY][PosX] = 7;
+            p_mMap->map[PosY + 1][PosX] = 5;
             PosY++;
         }
 
@@ -451,16 +200,16 @@ void CBombItWnd::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
         dir = 1;
         tmpX = PosX;
         tmpY = PosY;
-        if (PosY > 0 && map[PosY][PosX] == 5 && map[PosY - 1][PosX] == 0)
+        if (PosY > 0 && p_mMap->map[PosY][PosX] == 5 && p_mMap->map[PosY - 1][PosX] == 0)
         {
-            map[PosY][PosX] = 0;
-            map[PosY -1][PosX] = 5;
+            p_mMap->map[PosY][PosX] = 0;
+            p_mMap->map[PosY -1][PosX] = 5;
             PosY--;
         }
-        if (PosY > 0 && map[PosY][PosX] == 6 && map[PosY - 1][PosX] == 0)
+        if (PosY > 0 && p_mMap->map[PosY][PosX] == 6 && p_mMap->map[PosY - 1][PosX] == 0)
         {
-            map[PosY][PosX] = 7;
-            map[PosY - 1][PosX] = 5;
+            p_mMap->map[PosY][PosX] = 7;
+            p_mMap->map[PosY - 1][PosX] = 5;
             PosY--;
         }
         InvalidateRect(CRect((tmpX > 1 ? tmpX - 2 : (tmpX > 0 ? tmpX - 1 : tmpX)) * 60, (tmpY > 1 ? tmpY - 2 : (tmpY > 0 ? tmpY - 1 : tmpY)) * 60, (tmpX < 13 ? tmpX + 3 : (tmpX < 14 ? tmpX + 2 : (tmpX < 15 ? tmpX + 1 : tmpX))) * 60, (tmpY < 13 ? tmpY + 3 : (tmpY < 14 ? tmpY + 2 : (tmpY < 15 ? tmpY + 1 : tmpY))) * 60), true);
@@ -469,16 +218,16 @@ void CBombItWnd::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
         dir = 2;
         tmpX = PosX;
         tmpY = PosY;
-        if (PosX > 0 && map[PosY][PosX] == 5 && map[PosY][PosX - 1] == 0)
+        if (PosX > 0 && p_mMap->map[PosY][PosX] == 5 && p_mMap->map[PosY][PosX - 1] == 0)
         {
-            map[PosY][PosX] = 0;
-            map[PosY][PosX - 1] = 5;
+            p_mMap->map[PosY][PosX] = 0;
+            p_mMap->map[PosY][PosX - 1] = 5;
             PosX--;
         }
-        if (PosX > 0 && map[PosY][PosX] == 6 && map[PosY][PosX - 1] == 0)
+        if (PosX > 0 && p_mMap->map[PosY][PosX] == 6 && p_mMap->map[PosY][PosX - 1] == 0)
         {
-            map[PosY][PosX] = 7;
-            map[PosY][PosX - 1] = 5;
+            p_mMap->map[PosY][PosX] = 7;
+            p_mMap->map[PosY][PosX - 1] = 5;
             PosX--;
         }
         InvalidateRect(CRect((tmpX > 1 ? tmpX - 2 : (tmpX > 0 ? tmpX - 1 : tmpX)) * 60, (tmpY > 1 ? tmpY - 2 : (tmpY > 0 ? tmpY - 1 : tmpY)) * 60, (tmpX < 13 ? tmpX + 3 : (tmpX < 14 ? tmpX + 2 : (tmpX < 15 ? tmpX + 1 : tmpX))) * 60, (tmpY < 13 ? tmpY + 3 : (tmpY < 14 ? tmpY + 2 : (tmpY < 15 ? tmpY + 1 : tmpY))) * 60), true);
@@ -487,16 +236,16 @@ void CBombItWnd::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
         dir = 3;
         tmpX = PosX;
         tmpY = PosY;
-        if (PosX < COLUMN_NUM - 1 && map[PosY][PosX] == 5 && map[PosY][PosX + 1] == 0)
+        if (PosX < COLUMN_NUM - 1 && p_mMap->map[PosY][PosX] == 5 && p_mMap->map[PosY][PosX + 1] == 0)
         {
-            map[PosY][PosX] = 0;
-            map[PosY][PosX + 1] = 5;
+            p_mMap->map[PosY][PosX] = 0;
+            p_mMap->map[PosY][PosX + 1] = 5;
             PosX++;
         }
-        if (PosX < COLUMN_NUM - 1 && map[PosY][PosX] == 6 && map[PosY][PosX + 1] == 0)
+        if (PosX < COLUMN_NUM - 1 && p_mMap->map[PosY][PosX] == 6 && p_mMap->map[PosY][PosX + 1] == 0)
         {
-            map[PosY][PosX] = 7;
-            map[PosY][PosX + 1] = 5;
+            p_mMap->map[PosY][PosX] = 7;
+            p_mMap->map[PosY][PosX + 1] = 5;
             PosX++;
         }
         InvalidateRect(CRect((tmpX > 1 ? tmpX - 2 : (tmpX > 0 ? tmpX - 1 : tmpX)) * 60, (tmpY > 1 ? tmpY - 2 : (tmpY > 0 ? tmpY - 1 : tmpY)) * 60, (tmpX < 13 ? tmpX + 3 : (tmpX < 14 ? tmpX + 2 : (tmpX < 15 ? tmpX + 1 : tmpX))) * 60, (tmpY < 13 ? tmpY + 3 : (tmpY < 14 ? tmpY + 2 : (tmpY < 15 ? tmpY + 1 : tmpY))) * 60), true);
@@ -504,7 +253,7 @@ void CBombItWnd::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
     case VK_SPACE:
         if (BombNum)
         {
-            map[PosY][PosX] = 6;
+            p_mMap->map[PosY][PosX] = 6;
             BombNum--;
             BombPosX = PosX;
             BombPosY = PosY;
@@ -551,7 +300,7 @@ void CBombItWnd::OnQuit()
 
 void CBombItWnd::OnRestart()
 {
-    initMap();
+    p_mMap->initMap();
     dir = 0;
     PosX = 0;
     PosY = 0;
@@ -567,11 +316,11 @@ void CBombItWnd::OnAboutGame()
 void CBombItWnd::OnTimer(UINT_PTR nIDEvent)
 {
     int flag = 0;
-    if (map[BombPosY][BombPosX] == 6)
+    if (p_mMap->map[BombPosY][BombPosX] == 6)
     {
         flag = 1;
     }
-    map[BombPosY][BombPosX] = 8;
+    p_mMap->map[BombPosY][BombPosX] = 8;
     Invalidate();
     BombPosX = -1;
     BombPosY = -1;
@@ -590,13 +339,13 @@ void CBombItWnd::OnTimer(UINT_PTR nIDEvent)
 
 void CBombItWnd::OnChangemap()
 {
-    MapNum = (MapNum + 1) % 3+1;
+    p_mMap->MapNum = (p_mMap->MapNum + 1) % 3+1;
     BombNum = 1;
     dir = 0;
     PosX = 0;
     PosY = 0;
     died = 0;
-    initMap();
+    p_mMap->initMap();
     Invalidate();
 }
 

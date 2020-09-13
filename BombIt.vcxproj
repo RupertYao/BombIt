@@ -149,6 +149,7 @@
     <ClInclude Include="CDeclareDeathDlg.h" />
     <ClInclude Include="CDeclarreWinDlg.h" />
     <ClInclude Include="game.h" />
+    <ClInclude Include="Map.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
@@ -162,6 +163,7 @@
     <ClCompile Include="CDeclareDeathDlg.cpp" />
     <ClCompile Include="CDeclarreWinDlg.cpp" />
     <ClCompile Include="game.cpp" />
+    <ClCompile Include="Map.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon.ico" />
