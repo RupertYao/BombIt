@@ -174,7 +174,6 @@ void CBombItWnd::OnPaint()
 void CBombItWnd::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
     int tmpX, tmpY;
-    // TODO: 在此添加消息处理程序代码和/或调用默认值
     switch (nChar)
     {
     case VK_DOWN:
